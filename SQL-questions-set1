@@ -1,0 +1,157 @@
+1) 
+SELECT * FROM CITY 
+WHERE
+COUNTRYCODE = 'USA' and
+POPULATION > 100000;
+
+2)
+SELECT DISTINCT NAME FROM CITY 
+WHERE
+COUNTRYCODE = 'USA' and
+POPULATION > 120000;
+
+3)
+SELECT * FROM CITY;
+
+4)
+SELECT * FROM CITY
+WHERE
+ID = 1661;
+
+5)
+SELECT * FROM CITY 
+WHERE
+COUNTRYCODE = 'JPN';
+
+6)
+SELECT DISTINCT NAME FROM CITY 
+WHERE
+COUNTRYCODE = 'JPN';
+
+7)
+SELECT city,state FROM STATION;
+
+8)
+SELECT DISTINCT CITY
+FROM STATION
+WHERE
+ID % 2 = 0;
+
+9)
+SELECT COUNT(CITY) - COUNT(DISTINCT CITY) as diff
+FROM STATION;
+
+10)
+(SELECT CITY,length(CITY) as len_of_city
+FROM STATION WHERE
+length(CITY) = (SELECT max(length(CITY)) FROM STATION)
+ORDER BY CITY ASC limit 1)
+
+UNION
+
+(SELECT CITY,length(CITY) as len_of_city
+FROM STATION WHERE
+length(CITY) = (SELECT min(length(CITY)) FROM STATION)
+ORDER BY CITY ASC limit 1);
+
+
+11)
+SELECT DISTINCT CITY
+FROM STATION
+WHERE
+SUBSTR(LOWER(CITY),1,1) IN ('a','e','i','o','u');
+
+12)
+SELECT DISTINCT CITY
+FROM STATION
+WHERE
+SUBSTR(LOWER(CITY),LENGTH(CITY),1) IN ('a','e','i','o','u');
+
+13)
+SELECT DISTINCT CITY
+FROM STATION
+WHERE
+SUBSTR(LOWER(CITY),1,1) NOT IN ('a','e','i','o','u');
+
+14)
+SELECT DISTINCT CITY
+FROM STATION
+WHERE
+SUBSTR(LOWER(CITY),LENGTH(CITY),1) NOT IN ('a','e','i','o','u');
+
+15)
+SELECT DISTINCT CITY
+FROM STATION
+WHERE
+SUBSTR(LOWER(CITY),1,1) NOT IN ('a','e','i','o','u') or
+SUBSTR(LOWER(CITY),LENGTH(CITY),1) NOT IN ('a','e','i','o','u');
+
+16)
+SELECT DISTINCT CITY
+FROM STATION
+WHERE
+SUBSTR(LOWER(CITY),1,1) NOT IN ('a','e','i','o','u') and
+SUBSTR(LOWER(CITY),LENGTH(CITY),1) NOT IN ('a','e','i','o','u');
+
+17)
+SELECT p.product_id,p.product_name 
+FROM Product p 
+INNER JOIN Sales s ON p.product_id = s.product_id
+WHERE
+(s.sale_date BETWEEN '2019-01-01' AND '2019-03-31') AND
+p.product_id NOT IN (SELECT DISTINCT product_id FROM Sales WHERE sale_date NOT BETWEEN '2019-01-01' AND '2019-03-31');
+
+18)
+SELECT DISTINCT author_id as id
+FROM Views
+WHERE
+author_id = viewer_id
+ORDER BY
+author_id asc;
+
+19)
+SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
+SELECT round((d.cnt_immediate/count(*))*100,2) as immediate_percentage from Delivery
+CROSS JOIN
+(select count(*) as cnt_immediate from Delivery where order_date = customer_pref_delivery_date) as d;
+
+20)
+select b.ad_id,
+CASE 
+    WHEN ctr is null then 0 else ctr end as ctr from
+(select a.ad_id,round((a.total_ad_clicked/(a.total_ad_clicked + a.total_ad_viewed)) * 100,2) as ctr from
+(select ad_id,
+    sum(CASE
+        WHEN action = 'Clicked' THEN 1 ELSE 0
+    END) as total_ad_clicked,
+    sum(CASE
+        WHEN action = 'Viewed' THEN 1 ELSE 0
+    END) as total_ad_viewed
+from ads
+GROUP BY ad_id
+)  as a) as b
+order by
+b.ctr desc,
+b.ad_id asc;
+
+21)
+select employee_id,
+count(team_id) over (partition by team_id) as team_size
+from employee
+order by employee_id;
+
+22)
+select distinct a.country_name,
+CASE
+    WHEN AVG(b.weather_state) over (partition by a.country_name) <= 15 THEN 'Cold'
+    WHEN AVG(b.weather_state) over (partition by a.country_name) >= 25 THEN 'Hot'
+    ELSE 'Warm'
+END as weather_type
+
+from countries a
+inner JOIN
+weather b
+ON
+a.country_id = b.country_id
+WHERE
+b.day BETWEEN '2019-11-01' AND '2019-11-30';
