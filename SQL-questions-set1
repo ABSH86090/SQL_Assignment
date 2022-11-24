@@ -155,3 +155,72 @@ ON
 a.country_id = b.country_id
 WHERE
 b.day BETWEEN '2019-11-01' AND '2019-11-30';
+
+23)
+select a.product_id,round(sum(a.sale_price)/sum(a.units),2) as average_price from
+(
+select p.product_id, u.units,u.units*p.price as sale_price FROM
+Prices p
+inner JOIN
+UnitsSold u
+on 
+u.purchase_date between p.start_date and p.end_date AND
+u.product_id = p.product_id
+) as a
+group by
+a.product_id;
+
+24)
+select
+distinct player_id,
+min(event_date) over (partition by player_id) as first_login
+from Activity;
+
+25)
+select
+distinct a.player_id,a.device_id FROM Activity a
+inner join (select player_id,min(event_date) over (partition by player_id) as first_login from Activity) as b
+ON
+a.player_id = b.player_id AND
+a.event_date = b.first_login;
+
+26)
+select a.product_name,b.unit from Products a INNER JOIN
+(select distinct product_id,
+sum(unit) over (partition by product_id) as unit
+from Orders
+where order_date between '2020-02-01' and '2020-02-29' 
+) as b 
+ON a.product_id = b.product_id
+where b.unit >= 100;
+
+27)
+select user_id,name,mail from users 
+where 
+user_id not in (select user_id from users WHERE mail REGEXP '[^a-zA-Z-._@]') AND
+mail REGEXP '^[a-zA-Z].*@leetcode.com$';
+
+28)
+
+
+49)
+select r.student_id,r.course_id,r.max_score as grade from
+(
+select 
+    student_id,
+    course_id,
+    ROW_NUMBER() over (partition by student_id order by grade DESC,course_id) as top_row,
+    max(grade) over (partition by student_id) as max_score
+from Enrollments
+) as r
+where r.top_row = 1;	
+
+
+
+
+
+
+
+
+
+
